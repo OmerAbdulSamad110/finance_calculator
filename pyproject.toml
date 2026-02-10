@@ -1,0 +1,19 @@
+[project]
+name = "expanse-calculator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "aiomysql>=0.3.2",
+    "argon2-cffi>=25.1.0",
+    "fastapi-users[sqlalchemy]>=15.0.4",
+    "fastapi[standard]>=0.128.4",
+    "numpy>=2.2.6",
+    "passlib>=1.7.4",
+    "pydantic>=2.0",
+    "python-dotenv>=1.2.1",
+    "sqlalchemy>=2.0.46",
+    "sqlmodel>=0.0.32",
+    "uvicorn>=0.40.0",
+]
