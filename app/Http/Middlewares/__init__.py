@@ -10,7 +10,7 @@ origin = [
 ]
 
 
-def setup_middlewares(app: FastAPI) -> FastAPI:
+def setupMiddlewares(app: FastAPI):
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origin,
@@ -18,4 +18,3 @@ def setup_middlewares(app: FastAPI) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    return app
