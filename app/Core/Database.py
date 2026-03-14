@@ -8,6 +8,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
 from bootstrap.config import config
+from contextlib import asynccontextmanager
 
 DATABASE_URL = f"mysql+aiomysql://{config('db_username')}:{config('db_password')}@{config('db_host')}:{config('db_port')}/{config('db_database')}"
 
@@ -35,25 +36,28 @@ class Base(DeclarativeBase):
     pass
 
 
-# Helper function for dependency injection
-# 3. Define the asynchronous dependency function using 'yield'
-async def get_async_db() -> AsyncIterator[AsyncSession]:
-    """
-    Provides an encapsulated, asynchronous database session.
-    The code before 'yield' runs before the request.
-    The code after 'yield' runs after the response is sent.
-    """
+@asynccontextmanager
+async def getAysncDbContext() -> AsyncIterator[AsyncSession]:
     async with async_session() as session:
         try:
             yield session
-        finally:
-            await session.close()
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+
+
+# Helper function for dependency injection
+# 3. Define the asynchronous dependency function using 'yield'
+async def getAsyncDb() -> AsyncIterator[AsyncSession]:
+    async with getAysncDbContext() as session:
+        yield session
 
 
 # Optional: Enforce foreign keys (good practice)
 # Fix: Apply event to sync_engine, not async engine
 @event.listens_for(engine.sync_engine, "connect")
-def set_mysql_engine(dbapi_connection, connection_record):
+def setMysqlEngine(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("SET sql_mode='STRICT_TRANS_TABLES'")
     cursor.close()
