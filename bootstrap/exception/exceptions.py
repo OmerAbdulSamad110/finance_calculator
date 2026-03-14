@@ -3,15 +3,10 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
 
-def returnValidationError(errors: dict[list]) -> JSONResponse:
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-        content=jsonable_encoder(
-            {
-                "message": "Validation failed.",
-                "errors": errors,
-            }
-        ),
+def raiseUnprocessableContent(errors: dict[str, list[str]]):
+    raise HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail=errors,
     )
 
 
@@ -19,11 +14,15 @@ def raiseBadRequest(message="Bad request"):
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
 
+def raiseUnauthenticated(
+    message="Unauthenticated", headers={"WWW-Authenticate": "Bearer"}
+):
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail=message, headers=headers
+    )
+
+
 def raiseUnauthorized(message="Unauthorized"):
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=message)
-
-
-def raiseForbidden(message="Forbidden"):
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=message)
 
 

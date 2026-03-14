@@ -6,32 +6,36 @@ from collections import defaultdict
 import logging
 
 
-def setup_exceptions(app: FastAPI) -> FastAPI:
+def setupExceptions(app: FastAPI):
     # -------------------------
     # HTTPException handler
     # -------------------------
     @app.exception_handler(HTTPException)
-    async def http_exception_handler(request: Request, exc: HTTPException):
-        status_code = exc.status_code
+    async def httpExceptionHandler(request: Request, exc: HTTPException):
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        content = {"message": "Internal server error."}
         # If not explicitly allowed → treat as 500
-        if status_code not in (400, 401, 403, 404, 405, 419, 422):
-            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-            message = "Internal server error."
-        else:
-            message = exc.detail
-        logging.exception(message, {"status_code": status_code, "detail": exc.detail})
+        if exc.status_code in (400, 401, 403, 404, 405, 419, 422):
+            status_code = exc.status_code
+            if status_code == 422 and exc.detail is not None:
+                content = {"message": "Invalid data given.", "errors": exc.detail}
+            elif status_code == 401:
+                content = {"message": "Unauthenticated."}
+            elif status_code == 403:
+                content = {"message": "Unauthorized."}
+        logging.exception(
+            content["message"], {"status_code": status_code, "detail": exc.detail}
+        )
         return JSONResponse(
             status_code=status_code,
-            content={"message": message},
+            content=content,
         )
 
     # -------------------------
     # Validation errors (Pydantic)
     # -------------------------
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(
-        request: Request, exc: RequestValidationError
-    ):
+    async def validationExceptionHandler(request: Request, exc: RequestValidationError):
         reformatted_errors = defaultdict(list)
         for error in exc.errors():
             loc = error["loc"]
@@ -43,7 +47,7 @@ def setup_exceptions(app: FastAPI) -> FastAPI:
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             content=jsonable_encoder(
                 {
-                    "message": "Validation failed.",
+                    "message": "Invalid data given.",
                     "errors": reformatted_errors,
                 }
             ),
@@ -53,11 +57,9 @@ def setup_exceptions(app: FastAPI) -> FastAPI:
     # Catch ALL unhandled errors
     # -------------------------
     @app.exception_handler(Exception)
-    async def general_exception_handler(request: Request, exc: Exception):
+    async def generalExceptionHandler(request: Request, exc: Exception):
         logging.exception("Unhandled server error", exc_info=exc)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"message": "Internal server error."},
         )
-
-    return app
