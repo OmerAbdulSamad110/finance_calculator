@@ -1,6 +1,5 @@
-from typing import Type, TypeVar
-from app.Core.Database import Base, async_session
-from contextlib import asynccontextmanager
+from typing import Type, TypeVar, Optional
+from app.Core.Database import Base
 from sqlalchemy import select
 
 T = TypeVar("T", bound="Model")
@@ -16,12 +15,6 @@ class Model(Base):
     #     return cls.__name__.lower() + "s"
 
     @classmethod
-    @asynccontextmanager
-    async def get_session(cls):
-        async with async_session() as session:
-            yield session
-
-    @classmethod
     async def query(cls: Type[T], statement):
         async with cls.get_session() as session:
             result = await session.execute(statement)
@@ -33,7 +26,11 @@ class Model(Base):
             result = await session.execute(select(cls))
             return result.scalars().first()
 
-    def to_dict(self):
+    def toDict(self, exclude: Optional[list | str] = None):
         return {
-            column.name: getattr(self, column.name) for column in self.__table__.columns
+            column.name: getattr(self, column.name)
+            for column in self.__table__.columns
+            if exclude is None
+            or (isinstance(exclude, str) and exclude != column.name)
+            or column.name not in exclude
         }
