@@ -1,22 +1,35 @@
 from .Model import Model
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, DECIMAL, Enum
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    ForeignKey,
+    Enum,
+    Boolean,
+    DECIMAL,
+)
 from sqlalchemy.orm import relationship
 from datetime import timezone, datetime
 from functools import partial
-from app.Enums.FinancialFrequency import FinancialFrequency
+from app.Enums.FinancialFrequency import FinancialRecurringFrequency
 
 
-class FinancialEntry(Model):
-    __tablename__ = "financial_entries"
+class RecurringFinancialEntry(Model):
+    __tablename__ = "recurring_financial_entries"
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(255), nullable=False)
-    amount = Column(DECIMAL(precision=10, scale=2), nullable=False)
-    description = Column(String(300), nullable=False)
-    entered_at = Column(DateTime, nullable=False, index=True)
+    amount = Column(DECIMAL(10, 2), nullable=False)
+    description = Column(String(255), nullable=True)
     frequency = Column(
-        Enum(FinancialFrequency, values_callable=lambda x: [item.value for item in x]),
+        Enum(
+            FinancialRecurringFrequency,
+            values_callable=lambda x: [item.value for item in x],
+        ),
         nullable=False,
     )
+    generate_at = Column(DateTime, nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
     client_id = Column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
@@ -24,11 +37,6 @@ class FinancialEntry(Model):
         Integer,
         ForeignKey("financial_categories.id", ondelete="CASCADE"),
         nullable=False,
-    )
-    recurring_financial_entry_id = Column(
-        Integer,
-        ForeignKey("recurring_financial_entries.id", ondelete="CASCADE"),
-        nullable=True,
     )
     created_at = Column(
         DateTime, nullable=False, default=partial(datetime.now, timezone.utc)

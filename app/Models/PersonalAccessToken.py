@@ -23,5 +23,3 @@ class PersonalAccessToken(Model):
         default=partial(datetime.now, timezone.utc),
         onupdate=partial(datetime.now, timezone.utc),
     )
-
-    user = relationship("User", back_populates="personal_access_tokens")

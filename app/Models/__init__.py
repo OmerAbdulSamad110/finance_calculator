@@ -4,9 +4,9 @@ from .PasswordResetToken import PasswordResetToken
 from .Role import Role
 from .Permission import Permission
 from .PermissionRole import permission_role
-from .Category import Category
+from .FinancialCategory import FinancialCategory
 from .FinancialEntry import FinancialEntry
-from .RecurringEntry import RecurringEntry
+from .RecurringFinancialEntry import RecurringFinancialEntry
 
 
 __all__ = [
@@ -16,7 +16,7 @@ __all__ = [
     "Role",
     "Permission",
     "permission_role",
-    "Category",
+    "FinancialCategory",
     "FinancialEntry",
-    "RecurringEntry",
+    "RecurringFinancialEntry",
 ]

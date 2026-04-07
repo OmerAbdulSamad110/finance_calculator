@@ -30,11 +30,3 @@ class Role(Model):
         value = capwords(value)
         self.slug = snakeCase(value)
         return value
-
-    # Relations
-    users = relationship(
-        "User",
-        back_populates="role",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )

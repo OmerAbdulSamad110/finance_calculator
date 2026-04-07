@@ -28,9 +28,8 @@ class User(Model):
         onupdate=partial(datetime.now, timezone.utc),
     )
 
-    role = relationship("Role", back_populates="users")
-    personal_access_tokens = relationship("PersonalAccessToken", back_populates="user")
-
+    # Mutators
+    # ---- Mutator (auto-hash password) ----
     @validates("password")
     def validate_password(self, key, value):
         return Hash.make(value)
