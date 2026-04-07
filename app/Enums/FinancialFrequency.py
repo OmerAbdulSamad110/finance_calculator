@@ -1,8 +1,7 @@
 from enum import Enum
 
 
-class FinanceFrequency(Enum):
-    ONETIME = "one_time"
+class FinancialRecurringFrequency(Enum):
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
@@ -10,7 +9,8 @@ class FinanceFrequency(Enum):
     ANNUALLY = "annually"
 
 
-class FinanceRecurringFrequency(Enum):
+class FinancialFrequency(Enum):
+    ONETIME = "one_time"
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
