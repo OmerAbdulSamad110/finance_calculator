@@ -4,6 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from collections import defaultdict
 import logging
+from logs.logger import logger
 
 
 def setupExceptions(app: FastAPI):
@@ -17,6 +18,7 @@ def setupExceptions(app: FastAPI):
         # If not explicitly allowed → treat as 500
         if exc.status_code in (400, 401, 403, 404, 405, 419, 422):
             status_code = exc.status_code
+            content["message"] = exc.detail
             if status_code == 422 and exc.detail is not None:
                 content = {"message": "Invalid data given.", "errors": exc.detail}
             elif status_code == 401:
@@ -25,6 +27,9 @@ def setupExceptions(app: FastAPI):
                 content = {"message": "Unauthorized."}
         logging.exception(
             content["message"], {"status_code": status_code, "detail": exc.detail}
+        )
+        logger.error(
+            content["message"], extra={"status_code": status_code, "detail": exc.detail}
         )
         return JSONResponse(
             status_code=status_code,
@@ -58,6 +63,7 @@ def setupExceptions(app: FastAPI):
     # -------------------------
     @app.exception_handler(Exception)
     async def generalExceptionHandler(request: Request, exc: Exception):
+        logger.error("Unhandled server error", exc_info=exc)
         logging.exception("Unhandled server error", exc_info=exc)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
