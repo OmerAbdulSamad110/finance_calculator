@@ -41,7 +41,7 @@ async def paginate(
     total_pages = max(total_pages, 1)
     current_page = min(paginate_request.page, total_pages)
 
-    description = query.column_descriptions[0]
+    # description = query.column_descriptions[0]
     # Calculate the offset for pagination
     offset = (current_page - 1) * paginate_request.list_size
 
