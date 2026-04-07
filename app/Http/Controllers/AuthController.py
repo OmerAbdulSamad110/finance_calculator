@@ -16,6 +16,7 @@ from app.Http.Responses.JsonResponse import JsonResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Security
 from app.Http.Responses.UserResponse import UserDetailResponse, UserAuthResponse
+from bootstrap.config import config
 
 # Use HTTPBearer instead of OAuth2PasswordBearer
 security = HTTPBearer()
@@ -46,7 +47,9 @@ class AuthController:
                     ]
                 }
             )
-        minutes = None if request.remember is False else 60
+        minutes = (
+            config("access_token_expire_minutes") if request.remember is False else 60
+        )
         access_token = await Auth.createAccessToken(db, user, minutes)
         return JsonResponse(
             message="User logged in successfully.", data=access_token, status=True

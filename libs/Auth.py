@@ -35,7 +35,7 @@ class Auth:
     async def createAccessToken(
         db: AsyncSession,
         user: User | str,
-        minutes: int = config("access_token_expire_minutes"),
+        minutes: int,
         abilities: list = ["*"],
     ) -> AccessTokenResponse:
         if isinstance(user, str):
