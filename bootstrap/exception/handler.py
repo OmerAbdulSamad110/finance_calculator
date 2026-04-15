@@ -4,7 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from collections import defaultdict
 import logging
-from logs.logger import logger
+from app.Core.Logger import logger
 
 
 def setupExceptions(app: FastAPI):

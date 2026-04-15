@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 from app.Models.RecurringFinancialEntry import RecurringFinancialEntry
 from app.Models.FinancialEntry import FinancialEntry
 from app.Enums.FinancialFrequency import FinancialRecurringFrequency
-from logs.logger import logger
+from app.Core.Logger import logger
 
 
 async def generate_recurring_financial_entries():

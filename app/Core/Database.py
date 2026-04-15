@@ -9,13 +9,14 @@ from sqlalchemy.engine import Engine
 from sqlalchemy import event
 from bootstrap.config import config
 from contextlib import asynccontextmanager
+from bootstrap.config import config
 
 DATABASE_URL = f"mysql+aiomysql://{config('db_username')}:{config('db_password')}@{config('db_host')}:{config('db_port')}/{config('db_database')}"
 
 # Create Engine
 engine: Engine = create_async_engine(
     DATABASE_URL,
-    echo=True,  # Set False in production
+    echo=config("debug"),  # Set False in production
     pool_pre_ping=True,  # Avoid stale connections
     pool_recycle=3600,  # Auto recycle connections
 )

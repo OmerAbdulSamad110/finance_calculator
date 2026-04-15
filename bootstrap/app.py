@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.Core.Database import Base, engine
-from app.Console.Scheduler import setupScheduler
-from logs.logger import setupLogger
+from app.Core.Scheduler import setupScheduler
+from app.Core.Logger import setupLogger
 from app.Http.Middlewares import setupMiddlewares
 from routes import setupRoutes
 from .exception.handler import setupExceptions
