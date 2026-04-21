@@ -32,6 +32,7 @@ class Config(BaseSettings):
     redis_prefix: str = Field("ad_searcher_database_", env="REDIS_PREFIX")
     redis_host: str = Field(..., env="REDIS_HOST")
     redis_port: int = Field(..., env="REDIS_PORT")
+    redis_username: str = Field(..., env="REDIS_USERNAME")
     redis_password: Optional[str] = Field(None, env="REDIS_PASSWORD")
     redis_db: int = Field(..., env="REDIS_DB")
 
