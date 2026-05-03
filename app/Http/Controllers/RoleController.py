@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert, delete as deleteSql
+from sqlalchemy import select, insert, delete as deleteSql, asc, desc
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.Core.Database import getAsyncDb
@@ -12,8 +12,8 @@ from bootstrap.exception.exceptions import raiseUnprocessableContent, raiseNotFo
 from bootstrap.exception.validations import exists
 from app.Models.PermissionRole import permission_role
 from app.Http.Requests.PermissionRequest import PermissionIdsRequest
-from app.Http.Requests.DtRequest import CursorPaginateRequest
-from libs.Paginate import cursorPaginate
+from app.Http.Requests.DtRequest import DtRequest
+from libs.Paginate import paginate
 
 
 class RoleController:
@@ -21,15 +21,32 @@ class RoleController:
         pass
 
     async def list(
-        self,
-        request: CursorPaginateRequest = Depends(),
-        db: AsyncSession = Depends(getAsyncDb),
+        self, request: DtRequest = Depends(), db: AsyncSession = Depends(getAsyncDb)
     ) -> JsonResponse:
-        data = await cursorPaginate(db, select(Role), request)
+        query = select(Role)
+        if request.search is not None:
+            query = query.where(
+                Role.label.like(f"%{request.search}%"),
+            )
+        columns = {
+            "label": Role.label,
+        }
+        order_by = Role.created_at
+        if request.order_by is not None:
+            order_by = columns.get(request.order_by)
+        direction = asc if request.order_dir == "asc" else desc
+        query = query.order_by(direction(order_by))
+
+        data = await paginate(db, query, request)
         data.list = [
-            SimpleListResponse(
-                label=role["Role"].label, value=role["Role"].slug
-            ).model_dump(exclude_unset=True)
+            RoleDetailResponse(
+                id=role["Role"].id,
+                label=role["Role"].label,
+                slug=role["Role"].slug,
+                is_active=role["Role"].is_active,
+                created_at=role["Role"].created_at,
+                updated_at=role["Role"].updated_at,
+            )
             for role in data.list
         ]
         return JsonResponse(data={"roles": data})
@@ -42,7 +59,10 @@ class RoleController:
         if list_only == False:
             list = {"roles": [RoleDetailResponse(**role.toDict()) for role in roles]}
         else:
-            list = [SimpleListResponse(role.label, role.slug) for role in roles]
+            list = [
+                SimpleListResponse(label=role.label, value=str(role.id))
+                for role in roles
+            ]
         return JsonResponse(data={"list": list})
 
     async def show(
