@@ -115,48 +115,54 @@ class UserController:
         errors = {}
         if await exists(db, User, "email", request.email):
             errors["email"] = ["Email already exists."]
-        if not await exists(db, Role, "slug", request.role_id):
+        if not await exists(db, Role, "id", request.role_id):
             errors["role_id"] = ["Role does not exist."]
         if len(errors) > 0:
             raiseUnprocessableContent(errors)
-        user = User(**request.model_dump(exclude=["confirm_password"]))
+        user = User(**request.model_dump())
         db.add(user)
         await db.commit()
         return JsonResponse(message="User created successfully.")
 
-    async def update(
+    async def updateInfo(
         self,
-        request: UserUpdateInfoRequest | UserUpdatePasswordRequest,
+        request: UserUpdateInfoRequest,
         id: int,
         db: AsyncSession = Depends(getAsyncDb),
     ) -> JsonResponse:
-        is_info_update = isinstance(request, UserUpdateInfoRequest)
         errors = {}
         user = await self.__findUserForWrite(id, db)
-        if is_info_update:
-            if await exists(db, User, "email", request.email, {"id__ne": id}):
-                errors["email"] = ["Email already exists."]
-            if request.role_id != user.role_id and not await exists(
-                db, Role, "slug", request.role_id
-            ):
-                errors["role_id"] = ["Role does not exist."]
+        if await exists(db, User, "email", request.email, {"id__ne": id}):
+            errors["email"] = ["Email already exists."]
+        if request.role_id != user.role_id and not await exists(
+            db, Role, "id", request.role_id
+        ):
+            errors["role_id"] = ["Role does not exist."]
 
-            if len(errors) > 0:
-                raiseUnprocessableContent(errors)
-            user.name = request.name
-            user.email = request.email
-            user.role_id = request.role_id
-        else:
-            if request.password != request.confirm_password:
-                raiseUnprocessableContent(
-                    {"password": ["The password field confirmation does not match."]}
-                )
+        if len(errors) > 0:
+            raiseUnprocessableContent(errors)
+        user.name = request.name
+        user.email = request.email
+        user.role_id = request.role_id
+        await db.commit()
+
+        return JsonResponse(message=f"User information updated successfully.")
+
+    async def updatePassword(
+        self,
+        request: UserUpdatePasswordRequest,
+        id: int,
+        db: AsyncSession = Depends(getAsyncDb),
+    ) -> JsonResponse:
+        user = await self.__findUserForWrite(id, db)
+        if request.password != request.confirm_password:
+            raiseUnprocessableContent(
+                {"password": ["The password field confirmation does not match."]}
+            )
             user.password = request.password
         await db.commit()
 
-        return JsonResponse(
-            message=f"User {'information' if is_info_update else 'password'} updated successfully."
-        )
+        return JsonResponse(message=f"User password updated successfully.")
 
     async def delete(
         self, id: int, db: AsyncSession = Depends(getAsyncDb)

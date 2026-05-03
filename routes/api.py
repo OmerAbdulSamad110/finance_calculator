@@ -8,6 +8,7 @@ from app.Http.Controllers.RecurringFinancialEntryController import (
 )
 from fastapi import APIRouter, Depends
 from app.Http.Responses.ValidationResponse import ValidationResponse
+
 from app.Http.Middlewares.AuthMiddleware import handle as auth
 from app.Http.Middlewares.PermMiddleware import can
 from app.Http.Middlewares.HasRoleMiddleware import has
@@ -51,8 +52,14 @@ routes = [
     ("/v1/users/{id}", user_controller.show, ["GET"], can(permissions=["view_user"])),
     ("/v1/users", user_controller.store, ["POST"], can(permissions=["create_user"])),
     (
-        "/v1/users/{id}",
-        user_controller.update,
+        "/v1/users/{id}/info",
+        user_controller.updateInfo,
+        ["PUT"],
+        can(permissions=["update_user"]),
+    ),
+    (
+        "/v1/users/{id}/password",
+        user_controller.updatePassword,
         ["PUT"],
         can(permissions=["update_user"]),
     ),
