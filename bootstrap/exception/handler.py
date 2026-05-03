@@ -1,40 +1,36 @@
-from fastapi import FastAPI, Request, HTTPException, status
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from collections import defaultdict
 import logging
 from app.Core.Logger import logger
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 def setupExceptions(app: FastAPI):
     # -------------------------
     # HTTPException handler
     # -------------------------
-    @app.exception_handler(HTTPException)
-    async def httpExceptionHandler(request: Request, exc: HTTPException):
-        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    @app.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+        status_code = exc.status_code
         content = {"message": "Internal server error."}
-        # If not explicitly allowed → treat as 500
-        if exc.status_code in (400, 401, 403, 404, 405, 419, 422):
-            status_code = exc.status_code
+
+        if status_code in (400, 401, 403, 404, 405, 419, 422):
             content["message"] = exc.detail
-            if status_code == 422 and exc.detail is not None:
+
+            if status_code == 422:
                 content = {"message": "Invalid data given.", "errors": exc.detail}
             elif status_code == 401:
                 content = {"message": "Unauthenticated."}
             elif status_code == 403:
                 content = {"message": "Unauthorized."}
-        logging.exception(
-            content["message"], {"status_code": status_code, "detail": exc.detail}
-        )
-        logger.error(
-            content["message"], extra={"status_code": status_code, "detail": exc.detail}
-        )
-        return JSONResponse(
-            status_code=status_code,
-            content=content,
-        )
+            elif status_code == 405:
+                content = {"message": "Method not allowed."}
+
+        return JSONResponse(status_code=status_code, content=content)
 
     # -------------------------
     # Validation errors (Pydantic)
