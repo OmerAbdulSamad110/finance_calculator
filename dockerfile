@@ -9,6 +9,8 @@ WORKDIR /app
 
 RUN uv sync --locked --no-dev
 
+RUN mkdir -p /app/logs && touch /app/logs/app.log
+
 COPY . .
 
 EXPOSE 8000

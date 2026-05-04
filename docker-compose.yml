@@ -10,6 +10,7 @@ services:
         volumes:
             - ./:/app
             - /app/.venv
+            - logs_data:/app/logs
         environment:
             - APP_NAME=${APP_NAME}
             - APP_VERSION=${APP_VERSION}
@@ -141,7 +142,7 @@ services:
         depends_on:
             - redis
         environment:
-            - REDISINSIGHT_REDIS_HOST=redis
+            - REDISINSIGHT_REDIS_HOST=${REDIS_HOST}
             - REDISINSIGHT_REDIS_PORT=${REDIS_PORT}
             - REDISINSIGHT_REDIS_USERNAME=${REDIS_USERNAME}
             - REDISINSIGHT_REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -160,6 +161,7 @@ volumes:
     mysql-data:
     redis-data:
     redisinsight-data:
+    logs_data:
 
 networks:
     expense-network:
