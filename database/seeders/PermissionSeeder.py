@@ -5,19 +5,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 grouped_permissions = {
     "user": [
         {"label": "View User", "slug": "view_user"},
-        {"label": "Create User", "slug": "create_user"},
+        {"label": "Store User", "slug": "store_user"},
         {"label": "Update User", "slug": "update_user"},
         {"label": "Delete User", "slug": "delete_user"},
     ],
     "role": [
         {"label": "View Role", "slug": "view_role"},
-        {"label": "Create Role", "slug": "create_role"},
+        {"label": "Store Role", "slug": "store_role"},
         {"label": "Update Role", "slug": "update_role"},
         {"label": "Delete Role", "slug": "delete_role"},
     ],
     "permission": [
         {"label": "View Permission", "slug": "view_permission"},
-        {"label": "Create Permission", "slug": "create_permission"},
+        {"label": "Store Permission", "slug": "store_permission"},
         {"label": "Update Permission", "slug": "update_permission"},
         {"label": "Delete Permission", "slug": "delete_permission"},
     ],
@@ -27,7 +27,7 @@ grouped_permissions = {
     ],
     "setting": [
         {"label": "View Setting", "slug": "view_setting"},
-        {"label": "Create Setting", "slug": "create_setting"},
+        {"label": "Store Setting", "slug": "store_setting"},
         {"label": "Update Setting", "slug": "update_setting"},
         {"label": "Delete Setting", "slug": "delete_setting"},
     ],
@@ -37,7 +37,7 @@ grouped_permissions = {
     ],
     "mail_template": [
         {"label": "View Mail Template", "slug": "view_mail_template"},
-        {"label": "Create Mail Template", "slug": "create_mail_template"},
+        {"label": "Store Mail Template", "slug": "store_mail_template"},
         {"label": "Update Mail Template", "slug": "update_mail_template"},
         {"label": "Delete Mail Template", "slug": "delete_mail_template"},
     ],
@@ -46,7 +46,7 @@ grouped_permissions = {
 
 async def seedPermissions(db: AsyncSession):
     for permissions in grouped_permissions.values():
-        # create parent permission
+        # store parent permission
         parent = Permission(**permissions[0])
         db.add(parent)
         await db.flush()

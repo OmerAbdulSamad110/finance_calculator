@@ -65,15 +65,13 @@ class PermissionController:
                 ]
             }
         else:
-            list = {
-                "permissions": [
-                    SimpleListResponse(
-                        label=permission["Permission"].label,
-                        value=str(permission["Permission"].id),
-                    )
-                    for permission in permissions
-                ]
-            }
+            list = [
+                SimpleListResponse(
+                    label=permission["Permission"].label,
+                    value=str(permission["Permission"].id),
+                )
+                for permission in permissions
+            ]
         return JsonResponse(data={"list": list})
 
     async def show(
