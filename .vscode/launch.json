@@ -5,16 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: FastAPI",
+            "name": "Docker Debug",
             "type": "debugpy",
-            "request": "launch",
-            "module": "uvicorn",
-            "args": [
-                "bootstrap.app:app",
-                "--reload"
-            ],
-            "jinja": true,
-            "justMyCode": true
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "/app"
+                }
+            ]
         }
     ]
 }

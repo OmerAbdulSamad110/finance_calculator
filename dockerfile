@@ -7,12 +7,12 @@ ADD . /app
 
 WORKDIR /app
 
-RUN uv sync --locked --no-dev
+RUN mkdir -p logs && touch logs/app.log
 
-RUN mkdir -p /app/logs && touch /app/logs/app.log
+RUN uv sync --locked --no-dev
+RUN uv add --dev debugpy
 
 COPY . .
 
-EXPOSE 8000
-
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8000 5678
+CMD ["uv", "run", "python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "--wait-for-client", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
