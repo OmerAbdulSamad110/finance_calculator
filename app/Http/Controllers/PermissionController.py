@@ -1,5 +1,6 @@
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, or_, asc, desc
+from sqlalchemy.orm import aliased
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.Core.Database import getAsyncDb
 from app.Models.Permission import Permission
@@ -9,30 +10,77 @@ from app.Http.Responses.JsonResponse import JsonResponse
 from sqlalchemy.engine import RowMapping
 from bootstrap.exception.exceptions import raiseNotFound, raiseUnprocessableContent
 from bootstrap.exception.validations import exists
+from app.Http.Requests.DtRequest import DtRequest
+from libs.Paginate import paginate
+from app.Http.Responses.CommonResponse import SimpleListResponse
 
 
 class PermissionController:
     def __init__(self) -> None:
         pass
 
-    async def index(self, db: AsyncSession = Depends(getAsyncDb)) -> JsonResponse:
-        query = await db.execute(select(Permission))
-        permissions = query.mappings().all()
+    async def list(
+        self, request: DtRequest = Depends(), db: AsyncSession = Depends(getAsyncDb)
+    ) -> JsonResponse:
+        Parent = aliased(Permission)
+        query = select(Permission, Parent.label.label("parent_label")).join(
+            Parent, Parent.id == Permission.parent_id, isouter=True
+        )
+        if request.search is not None:
+            query = query.where(
+                or_(
+                    Permission.label.like(f"%{request.search}%"),
+                    Parent.label.like(f"%{request.search}%"),
+                )
+            )
+        columns = {"label": Permission.label, "parent.label": Parent.label}
+        order_by = Permission.created_at
+        if request.order_by is not None:
+            order_by = columns.get(request.order_by)
+        direction = asc if request.order_dir == "asc" else desc
+        query = query.order_by(direction(order_by))
 
-        list = {
-            "permissions": [
-                PermissionDetailResponse(**self.__formatPermission(permission))
-                for permission in permissions
-            ]
-        }
+        data = await paginate(db, query, request)
+        data.list = [
+            PermissionDetailResponse(**self.__formatPermission(permission))
+            for permission in data.list
+        ]
+        return JsonResponse(data={"permissions": data})
 
+    async def index(
+        self, parent_only: bool = False, db: AsyncSession = Depends(getAsyncDb)
+    ) -> JsonResponse:
+        query = select(Permission)
+        if parent_only:
+            query = query.where(Permission.parent_id == None)
+        stmt = await db.execute(query)
+        query = query.order_by(asc(Permission.label))
+        permissions = stmt.mappings().all()
+
+        if not parent_only:
+            list = {
+                "permissions": [
+                    PermissionDetailResponse(**self.__formatPermission(permission))
+                    for permission in permissions
+                ]
+            }
+        else:
+            list = {
+                "permissions": [
+                    SimpleListResponse(
+                        label=permission["Permission"].label,
+                        value=str(permission["Permission"].id),
+                    )
+                    for permission in permissions
+                ]
+            }
         return JsonResponse(data={"list": list})
 
     async def show(
         self, id: int, db: AsyncSession = Depends(getAsyncDb)
     ) -> JsonResponse:
-        query = await db.execute(select(Permission).where(Permission.id == id))
-        permission = query.mappings().first()
+        stmt = await db.execute(select(Permission).where(Permission.id == id))
+        permission = stmt.mappings().first()
         if not permission:
             raiseNotFound("Permission not found.")
         return JsonResponse(
@@ -89,19 +137,22 @@ class PermissionController:
         await db.commit()
         return JsonResponse(message="Permission deleted successfully.")
 
-    def __formatPermission(permission: RowMapping) -> dict:
-        return {
-            "id": permission["id"],
-            "label": permission["label"],
-            "slug": permission["slug"],
-            "parent_id": permission["parent_id"],
-            "created_at": permission["created_at"],
-            "updated_at": permission["updated_at"],
+    def __formatPermission(self, permission: RowMapping) -> dict:
+        item = {
+            "id": permission["Permission"].id,
+            "label": permission["Permission"].label,
+            "slug": permission["Permission"].slug,
+            "parent_id": permission["Permission"].parent_id,
+            "created_at": permission["Permission"].created_at,
+            "updated_at": permission["Permission"].updated_at,
         }
+        if permission["parent_label"] is not None:
+            item["parent_label"] = permission["parent_label"]
+        return item
 
     async def __findPermissionForWrite(self, db: AsyncSession, id: int):
-        query = await db.execute(select(Permission).where(Permission.id == id))
-        permission = query.scalar_one_or_none()
+        stmt = await db.execute(select(Permission).where(Permission.id == id))
+        permission = stmt.scalar_one_or_none()
         if not permission:
             raiseNotFound("Permission not found.")
         return permission

@@ -42,13 +42,8 @@ routes = [
     ("/v1/auth/logout", auth_controller.logout, ["POST"], auth),
     ("/v1/auth/me", auth_controller.me, ["GET"], auth),
     # User routes as a user with authorization
-    ("/v1/users/list", user_controller.list, ["GET"]),
-    (
-        "/v1/users",
-        user_controller.index,
-        ["GET"],
-        can(permissions=["view_user"]),
-    ),
+    ("/v1/users/list", user_controller.list, ["GET"], can(permissions=["view_user"])),
+    ("/v1/users", user_controller.index, ["GET"], can(permissions=["view_user"])),
     ("/v1/users/{id}", user_controller.show, ["GET"], can(permissions=["view_user"])),
     ("/v1/users", user_controller.store, ["POST"], can(permissions=["create_user"])),
     (
@@ -70,7 +65,7 @@ routes = [
         can(permissions=["delete_user"]),
     ),
     # Role routes as a user with authorization
-    ("/v1/roles/list", role_controller.list, ["GET"]),
+    ("/v1/roles/list", role_controller.list, ["GET"], can(permissions=["view_role"])),
     ("/v1/roles", role_controller.index, ["GET"], can(permissions=["view_role"])),
     ("/v1/roles/{id}", role_controller.show, ["GET"], can(permissions=["view_role"])),
     ("/v1/roles", role_controller.store, ["POST"], can(permissions=["create_role"])),
@@ -93,6 +88,12 @@ routes = [
         can(permissions=["sync_permission_role"]),
     ),
     # Permission routes as a user with authorization
+    (
+        "/v1/permissions/list",
+        permission_controller.list,
+        ["GET"],
+        can(permissions=["view_permission"]),
+    ),
     (
         "/v1/permissions",
         permission_controller.index,
