@@ -1,0 +1,25 @@
+{
+  "name": "App",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "KevinRose.vsc-python-indent",
+        "eamodio.gitlens",
+        "charliermarsh.ruff",
+        "Codeium.codeium",
+        "ms-azuretools.vscode-containers"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "python.formatting.provider": "black",
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      }
+    }
+  }
+}

@@ -1,6 +1,8 @@
 # ── Stage 1: Builder ────────────────────────────────────────────
 FROM python:3.14-slim-bookworm
 
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
 COPY --from=ghcr.io/astral-sh/uv:0.11.7 /uv /uvx /bin/
 
 ADD . /app
@@ -10,7 +12,7 @@ WORKDIR /app
 RUN mkdir -p logs && touch logs/app.log
 
 RUN uv sync --locked --no-dev
-RUN uv add --dev debugpy
+RUN uv add --dev debugpy black
 
 COPY . .
 
