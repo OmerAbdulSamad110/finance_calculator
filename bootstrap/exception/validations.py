@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from sqlalchemy import select, exists as sqlExists
 from app.Models import Model
+from fastapi import UploadFile
 
 
 async def exists(
@@ -30,3 +31,7 @@ async def exists(
             column = getattr(model, field)
             stmt = stmt.where(operators[op](column, value))
     return bool(await db.scalar(stmt))
+
+
+async def fileMaxSize(file: UploadFile, max_size: int) -> bool:
+    return len(await file.read()) > max_size

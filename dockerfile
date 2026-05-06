@@ -12,7 +12,7 @@ WORKDIR /app
 RUN mkdir -p logs && touch logs/app.log
 
 RUN uv sync --locked --no-dev
-RUN uv add --dev debugpy black
+RUN uv add --dev debugpy
 
 COPY . .
 

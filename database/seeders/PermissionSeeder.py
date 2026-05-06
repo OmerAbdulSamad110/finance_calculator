@@ -21,10 +21,6 @@ grouped_permissions = {
         {"label": "Update Permission", "slug": "update_permission"},
         {"label": "Delete Permission", "slug": "delete_permission"},
     ],
-    "permission_role": [
-        {"label": "View Permission Role", "slug": "view_permission_role"},
-        {"label": "Assign Permission Role", "slug": "sync_permission_role"},
-    ],
     "setting": [
         {"label": "View Setting", "slug": "view_setting"},
         {"label": "Store Setting", "slug": "store_setting"},
