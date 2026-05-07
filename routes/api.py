@@ -1,11 +1,8 @@
 from app.Http.Controllers.AuthController import AuthController
+from app.Http.Controllers.CompanyController import CompanyController
 from app.Http.Controllers.UserController import UserController
 from app.Http.Controllers.RoleController import RoleController
 from app.Http.Controllers.PermissionController import PermissionController
-from app.Http.Controllers.FinancialEntryController import FinancialEntryController
-from app.Http.Controllers.RecurringFinancialEntryController import (
-    RecurringFinancialEntryController,
-)
 from fastapi import APIRouter, Depends
 from app.Http.Responses.ValidationResponse import ValidationResponse
 
@@ -24,11 +21,10 @@ api_router = APIRouter(
 )
 # Controllers
 auth_controller = AuthController()
+company_controller = CompanyController()
 user_controller = UserController()
 role_controller = RoleController()
 permission_controller = PermissionController()
-financial_entry_controller = FinancialEntryController()
-recurring_financial_entry_controller = RecurringFinancialEntryController()
 
 routes = [
     # Auth routes as a guest
@@ -41,11 +37,112 @@ routes = [
     ("/v1/auth/refresh-token", auth_controller.refreshToken, ["POST"]),
     ("/v1/auth/logout", auth_controller.logout, ["POST"], auth),
     ("/v1/auth/me", auth_controller.me, ["GET"], auth),
+    # Country routes as a user with authorization
+    (
+        "/v1/countries",
+        company_controller.index,
+        ["GET"],
+        # can(permissions=["view_country"]),
+    ),
+    (
+        "/v1/countries/{id}",
+        company_controller.show,
+        ["GET"],
+        # can(permissions=["view_country"]),
+    ),
+    (
+        "/v1/countries",
+        company_controller.store,
+        ["POST"],
+        # can(permissions=["store_country"]),
+    ),
+    (
+        "/v1/countries/{id}",
+        company_controller.update,
+        ["PUT"],
+        # can(permissions=["update_country"]),
+    ),
+    (
+        "/v1/countries/{id}",
+        company_controller.delete,
+        ["DELETE"],
+        # can(permissions=["delete_country"]),
+    ),
+    ("/v1/countries/list", company_controller.list, ["GET"]),
+    # City routes as a user with authorization
+    (
+        "/v1/cities",
+        company_controller.index,
+        ["GET"],
+        # can(permissions=["view_city"]),
+    ),
+    (
+        "/v1/cities/{id}",
+        company_controller.show,
+        ["GET"],
+        # can(permissions=["view_city"]),
+    ),
+    (
+        "/v1/cities",
+        company_controller.store,
+        ["POST"],
+        # can(permissions=["store_city"]),
+    ),
+    (
+        "/v1/cities/{id}",
+        company_controller.update,
+        ["PUT"],
+        # can(permissions=["update_city"]),
+    ),
+    (
+        "/v1/cities/{id}",
+        company_controller.delete,
+        ["DELETE"],
+        # can(permissions=["delete_city"]),
+    ),
+    ("/v1/cities/list", company_controller.list, ["GET"]),
+    # Company routes as a user with authorization
+    (
+        "/v1/companies",
+        company_controller.index,
+        ["GET"],
+        # can(permissions=["view_company"]),
+    ),
+    (
+        "/v1/companies/{id}",
+        company_controller.show,
+        ["GET"],
+        # can(permissions=["view_company"]),
+    ),
+    (
+        "/v1/companies",
+        company_controller.store,
+        ["POST"],
+        # can(permissions=["store_company"]),
+    ),
+    (
+        "/v1/companies/{id}",
+        company_controller.update,
+        ["PUT"],
+        # can(permissions=["update_company"]),
+    ),
+    (
+        "/v1/companies/{id}",
+        company_controller.delete,
+        ["DELETE"],
+        # can(permissions=["delete_company"]),
+    ),
+    ("/v1/companies/list", company_controller.list, ["GET"]),
     # User routes as a user with authorization
-    ("/v1/users/list", user_controller.list, ["GET"], can(permissions=["view_user"])),
+    (
+        "/v1/users/list",
+        user_controller.list,
+        ["GET"],
+        #  can(permissions=["view_user"])
+    ),
     ("/v1/users", user_controller.index, ["GET"], can(permissions=["view_user"])),
     ("/v1/users/{id}", user_controller.show, ["GET"], can(permissions=["view_user"])),
-    ("/v1/users", user_controller.store, ["POST"], can(permissions=["create_user"])),
+    ("/v1/users", user_controller.store, ["POST"], can(permissions=["store_user"])),
     (
         "/v1/users/{id}/info",
         user_controller.updateInfo,
@@ -65,115 +162,78 @@ routes = [
         can(permissions=["delete_user"]),
     ),
     # Role routes as a user with authorization
-    ("/v1/roles/list", role_controller.list, ["GET"], can(permissions=["view_role"])),
-    ("/v1/roles", role_controller.index, ["GET"], can(permissions=["view_role"])),
-    ("/v1/roles/{id}", role_controller.show, ["GET"], can(permissions=["view_role"])),
-    ("/v1/roles", role_controller.store, ["POST"], can(permissions=["create_role"])),
+    (
+        "/v1/roles/list",
+        role_controller.list,
+        ["GET"],
+        #  can(permissions=["view_role"])
+    ),
+    (
+        "/v1/roles",
+        role_controller.index,
+        ["GET"],
+        #  can(permissions=["view_role"])
+    ),
+    (
+        "/v1/roles/{id}",
+        role_controller.show,
+        ["GET"],
+        #  can(permissions=["view_role"])
+    ),
+    (
+        "/v1/roles",
+        role_controller.store,
+        ["POST"],
+        #  can(permissions=["store_role"])
+    ),
     (
         "/v1/roles/{id}",
         role_controller.update,
         ["PUT"],
-        can(permissions=["update_role"]),
+        # can(permissions=["update_role"]),
     ),
     (
         "/v1/roles/{id}",
         role_controller.delete,
         ["DELETE"],
-        can(permissions=["delete_role"]),
-    ),
-    (
-        "/v1/roles/{role_id}/sync-permissions",
-        role_controller.syncRolePermissions,
-        ["POST"],
-        can(permissions=["sync_permission_role"]),
+        # can(permissions=["delete_role"]),
     ),
     # Permission routes as a user with authorization
     (
         "/v1/permissions/list",
         permission_controller.list,
         ["GET"],
-        can(permissions=["view_permission"]),
+        # can(permissions=["view_permission"]),
     ),
     (
         "/v1/permissions",
         permission_controller.index,
         ["GET"],
-        can(permissions=["view_permission"]),
+        # can(permissions=["view_permission"]),
     ),
     (
         "/v1/permissions/{id}",
         permission_controller.show,
         ["GET"],
-        can(permissions=["view_permission"]),
+        # can(permissions=["view_permission"]),
     ),
     (
         "/v1/permissions",
         permission_controller.store,
         ["POST"],
-        can(permissions=["create_permission"]),
+        # can(permissions=["store_permission"]),
     ),
     (
         "/v1/permissions/{id}",
         permission_controller.update,
         ["PUT"],
-        can(permissions=["update_permission"]),
+        # can(permissions=["update_permission"]),
     ),
     (
         "/v1/permissions/{id}",
         permission_controller.delete,
         ["DELETE"],
-        can(permissions=["delete_permission"]),
-    ),
-    # Recurring Financial Entry routes as a user with authorization
-    (
-        "/v1/recurring-financial-entries/list",
-        recurring_financial_entry_controller.list,
-        ["GET"],
-        has("client"),
-    ),
-    (
-        "/v1/recurring-financial-entries/resources",
-        recurring_financial_entry_controller.resources,
-        ["GET"],
-        has("client"),
-    ),
-    (
-        "/v1/recurring-financial-entries",
-        recurring_financial_entry_controller.store,
-        ["POST"],
-        has("client"),
-    ),
-    (
-        "/v1/recurring-financial-entries/{id}",
-        recurring_financial_entry_controller.update,
-        ["PUT"],
-        has("client"),
-    ),
-    (
-        "/v1/recurring-financial-entries/{id}",
-        recurring_financial_entry_controller.delete,
-        ["DELETE"],
-        has("client"),
-    ),
-    # Financial Entry routes as a user with authorization
-    ("/v1/financial-entries", financial_entry_controller.index, ["GET"], has("client")),
-    (
-        "/v1/financial-entries",
-        financial_entry_controller.store,
-        ["POST"],
-        has("client"),
-    ),
-    (
-        "/v1/financial-entries/resources",
-        financial_entry_controller.resources,
-        ["GET"],
-        has("client"),
-    ),
-    (
-        "/v1/financial-entries/{id}",
-        financial_entry_controller.show,
-        ["GET"],
-        has("client"),
+        # can(permissions=["delete_permission"]),
     ),
 ]
 

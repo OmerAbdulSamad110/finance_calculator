@@ -7,7 +7,7 @@ from app.Models.Permission import Permission
 from app.Http.Requests.RoleRequest import RoleFormRequest
 from app.Http.Responses.JsonResponse import JsonResponse
 from app.Http.Responses.RoleResponse import RoleDetailResponse
-from app.Http.Responses.CommonResponse import SimpleListResponse
+from app.Http.Responses.CommonResponse import SimpleListItemResponse
 from bootstrap.exception.exceptions import raiseUnprocessableContent, raiseNotFound
 from bootstrap.exception.validations import exists
 from app.Models.PermissionRole import permission_role
@@ -60,7 +60,7 @@ class RoleController:
             list = {"roles": [RoleDetailResponse(**role.toDict()) for role in roles]}
         else:
             list = [
-                SimpleListResponse(label=role.label, value=str(role.id))
+                SimpleListItemResponse(label=role.label, value=str(role.id))
                 for role in roles
             ]
         return JsonResponse(data={"list": list})

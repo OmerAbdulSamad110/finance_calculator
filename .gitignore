@@ -7,6 +7,8 @@ wheels/
 *.egg-info
 .env
 logs/app.log
+/storage/logs/
+/storage/logs/*.log
 
 # Virtual environments
 .venv

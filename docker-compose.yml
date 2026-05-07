@@ -9,7 +9,7 @@ services:
             - '${APP_PORT:-8000}:8000'
             - '5678:5678'
         volumes:
-            - ./logs:/app/logs 
+            - ./storage:/app/storage 
             - ./:/app
             - /app/.venv
         environment:

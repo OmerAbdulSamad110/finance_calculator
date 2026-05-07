@@ -1,6 +1,5 @@
 from fastapi import status, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
+from typing import NoReturn
 
 
 def raiseUnprocessableContent(errors: dict[str, list[str]]):
@@ -26,5 +25,5 @@ def raiseUnauthorized(message="Unauthorized"):
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=message)
 
 
-def raiseNotFound(message="Not found"):
+def raiseNotFound(message="Not found") -> NoReturn:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)

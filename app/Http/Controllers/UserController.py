@@ -42,7 +42,7 @@ class UserController:
             "email": User.email,
             "is_active": User.is_active,
             "created_at": User.created_at,
-            "role_label": Role.label,
+            "roles.label": Role.label,
         }
         order_by = User.created_at
         if request.order_by is not None:

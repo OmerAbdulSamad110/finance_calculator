@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class SimpleListResponse(BaseModel):
+class SimpleListItemResponse(BaseModel):
     label: str
     value: str

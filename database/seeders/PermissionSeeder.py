@@ -3,6 +3,24 @@ from app.Http.Responses.JsonResponse import JsonResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 grouped_permissions = {
+    "Country": [
+        {"label": "View Country", "slug": "view_country"},
+        {"label": "Store Country", "slug": "store_country"},
+        {"label": "Update Country", "slug": "update_country"},
+        {"label": "Delete Country", "slug": "delete_country"},
+    ],
+    "City": [
+        {"label": "View City", "slug": "view_city"},
+        {"label": "Store City", "slug": "store_city"},
+        {"label": "Update City", "slug": "update_city"},
+        {"label": "Delete City", "slug": "delete_city"},
+    ],
+    "company": [
+        {"label": "View Company", "slug": "view_company"},
+        {"label": "Store Company", "slug": "store_company"},
+        {"label": "Update Company", "slug": "update_company"},
+        {"label": "Delete Company", "slug": "delete_company"},
+    ],
     "user": [
         {"label": "View User", "slug": "view_user"},
         {"label": "Store User", "slug": "store_user"},
