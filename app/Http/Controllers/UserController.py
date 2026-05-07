@@ -10,21 +10,19 @@ from sqlalchemy import select, or_, asc, desc
 from sqlalchemy.engine import RowMapping
 from bootstrap.exception.exceptions import raiseUnprocessableContent, raiseNotFound
 from bootstrap.exception.validations import exists
-from typing import Optional
 from app.Core.Database import getAsyncDb
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 from app.Http.Responses.JsonResponse import JsonResponse
-from app.Http.Requests.DtRequest import DtRequest
-from libs.Paginate import paginate
+from libs.Paginate import Paginate, PaginationDependency
 
 
 class UserController:
     def __init__(self) -> None:
         pass
 
-    async def list(
-        self, request: DtRequest = Depends(), db: AsyncSession = Depends(getAsyncDb)
+    async def index(
+        self, request: PaginationDependency, db: AsyncSession = Depends(getAsyncDb)
     ) -> JsonResponse:
         query = select(
             User, Role.label.label("role_label"), Role.slug.label("role_slug")
@@ -42,7 +40,7 @@ class UserController:
             "email": User.email,
             "is_active": User.is_active,
             "created_at": User.created_at,
-            "role_label": Role.label,
+            "roles.label": Role.label,
         }
         order_by = User.created_at
         if request.order_by is not None:
@@ -50,44 +48,12 @@ class UserController:
         direction = asc if request.order_dir == "asc" else desc
         query = query.order_by(direction(order_by))
 
-        data = await paginate(db, query, request)
+        data = await Paginate.offset(db, query, request)
         data.list = [
-            UserDetailResponse(**self.__formatUserData(user)).model_dump(
-                exclude_unset=True
-            )
+            UserDetailResponse(**self.__formatItem(user)).model_dump(exclude_unset=True)
             for user in data.list
         ]
         return JsonResponse(data={"users": data})
-
-    async def index(
-        self,
-        role_slug: Optional[str] = None,
-        with_role: bool = False,
-        db: AsyncSession = Depends(getAsyncDb),
-    ) -> JsonResponse:
-        if not with_role:
-            stmt = select(User)
-        else:
-            stmt = select(
-                User,
-                Role.label.label("role_label"),
-                Role.slug.label("role_slug"),
-            ).join(Role, Role.id == User.role_id)
-        if role_slug is not None:
-            role = await self.__findRole(role_slug, db)
-            stmt = stmt.where(User.role_id == role.id)
-
-        query = await db.execute(stmt)
-        users = query.mappings().all()
-        list = {
-            "users": [
-                UserDetailResponse(**self.__formatUserData(user)).model_dump(
-                    exclude_unset=True
-                )
-                for user in users
-            ]
-        }
-        return JsonResponse(data={"list": list})
 
     async def show(
         self, id: int, with_role: bool = False, db: AsyncSession = Depends(getAsyncDb)
@@ -104,7 +70,7 @@ class UserController:
         if not user:
             raiseNotFound("User not found.")
         return JsonResponse(
-            data=UserDetailResponse(**self.__formatUserData(user)).model_dump(
+            data=UserDetailResponse(**self.__formatItem(user)).model_dump(
                 exclude_unset=True
             )
         )
@@ -131,7 +97,7 @@ class UserController:
         db: AsyncSession = Depends(getAsyncDb),
     ) -> JsonResponse:
         errors = {}
-        user = await self.__findUserForWrite(id, db)
+        user = await self.__findItemForWrite(id, db)
         if await exists(db, User, "email", request.email, {"id__ne": id}):
             errors["email"] = ["Email already exists."]
         if request.role_id != user.role_id and not await exists(
@@ -154,7 +120,7 @@ class UserController:
         id: int,
         db: AsyncSession = Depends(getAsyncDb),
     ) -> JsonResponse:
-        user = await self.__findUserForWrite(id, db)
+        user = await self.__findItemForWrite(id, db)
         if request.password != request.confirm_password:
             raiseUnprocessableContent(
                 {"password": ["The password field confirmation does not match."]}
@@ -167,7 +133,7 @@ class UserController:
     async def delete(
         self, id: int, db: AsyncSession = Depends(getAsyncDb)
     ) -> JsonResponse:
-        user = await self.__findUserForWrite(id, db)
+        user = await self.__findItemForWrite(id, db)
         await db.delete(user)
         await db.commit()
         return JsonResponse(message="User deleted successfully.")
@@ -185,14 +151,14 @@ class UserController:
             raiseNotFound("Role not found.")
         return role
 
-    async def __findUserForWrite(self, id: int, db: AsyncSession) -> User:
+    async def __findItemForWrite(self, id: int, db: AsyncSession) -> User:
         query = await db.execute(select(User).where(User.id == id))
         user = query.scalar_one_or_none()
         if user is None:
             raiseNotFound("User not found.")
         return user
 
-    def __formatUserData(self, user: RowMapping) -> dict:
+    def __formatItem(self, user: RowMapping) -> dict:
         user_dict = {
             "id": user["User"].id,
             "name": user["User"].name,

@@ -9,7 +9,7 @@ from app.Core.Database import getAsyncDb
 from app.Http.Requests.DtRequest import DtRequest
 from app.Http.Responses.UserResponse import UserAuthResponse
 from app.Http.Responses.JsonResponse import JsonResponse
-from libs.Paginate import paginate
+from libs.Paginate import Paginate, PaginationDependency
 from app.Http.Responses.RecurringFinancialEntryResponse import (
     RecurringFinancialEntryDetailResponse,
 )
@@ -24,10 +24,10 @@ class RecurringFinancialEntryController:
     def __init__(self) -> None:
         pass
 
-    async def list(
+    async def index(
         self,
         request: Request,
-        payload: DtRequest = Query(...),
+        payload: PaginationDependency,
         db: AsyncSession = Depends(getAsyncDb),
     ) -> JsonResponse:
         user: UserAuthResponse = getattr(request.state, "user")
@@ -62,7 +62,7 @@ class RecurringFinancialEntryController:
         direction = asc if payload.order_dir == "asc" else desc
         query = query.order_by(direction(order_by))
 
-        data = await paginate(db, query, request)
+        data = await Paginate.offset(db, query, payload)
         data.list = [self.__formatEntryData(entry) for entry in data.list]
         return JsonResponse(data={"recurring_entries": data})
 

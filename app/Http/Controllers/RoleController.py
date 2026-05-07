@@ -7,21 +7,22 @@ from app.Models.Permission import Permission
 from app.Http.Requests.RoleRequest import RoleFormRequest
 from app.Http.Responses.JsonResponse import JsonResponse
 from app.Http.Responses.RoleResponse import RoleDetailResponse
-from app.Http.Responses.CommonResponse import SimpleListResponse
+from app.Http.Responses.CommonResponse import SimpleListItemResponse
 from bootstrap.exception.exceptions import raiseUnprocessableContent, raiseNotFound
 from bootstrap.exception.validations import exists
 from app.Models.PermissionRole import permission_role
 from app.Http.Requests.PermissionRequest import PermissionIdsRequest
-from app.Http.Requests.DtRequest import DtRequest
-from libs.Paginate import paginate
+from libs.Paginate import Paginate, PaginationDependency
 
 
 class RoleController:
     def __init__(self) -> None:
         pass
 
-    async def list(
-        self, request: DtRequest = Depends(), db: AsyncSession = Depends(getAsyncDb)
+    async def index(
+        self,
+        request: PaginationDependency,
+        db: AsyncSession = Depends(getAsyncDb),
     ) -> JsonResponse:
         query = select(Role)
         if request.search is not None:
@@ -37,7 +38,7 @@ class RoleController:
         direction = asc if request.order_dir == "asc" else desc
         query = query.order_by(direction(order_by))
 
-        data = await paginate(db, query, request)
+        data = await Paginate.offset(db, query, request)
         data.list = [
             RoleDetailResponse(
                 id=role["Role"].id,
@@ -51,7 +52,7 @@ class RoleController:
         ]
         return JsonResponse(data={"roles": data})
 
-    async def index(
+    async def list(
         self, list_only: bool = False, db: AsyncSession = Depends(getAsyncDb)
     ) -> JsonResponse:
         query = await db.execute(select(Role))
@@ -60,7 +61,7 @@ class RoleController:
             list = {"roles": [RoleDetailResponse(**role.toDict()) for role in roles]}
         else:
             list = [
-                SimpleListResponse(label=role.label, value=str(role.id))
+                SimpleListItemResponse(label=role.label, value=str(role.id))
                 for role in roles
             ]
         return JsonResponse(data={"list": list})
@@ -68,7 +69,7 @@ class RoleController:
     async def show(
         self, id: int, db: AsyncSession = Depends(getAsyncDb)
     ) -> JsonResponse:
-        role = await self.__findRoleForWrite(id, db)
+        role = await self.__findItemForWrite(id, db)
         return JsonResponse(data=RoleDetailResponse(**role.toDict()).model_dump())
 
     async def store(
@@ -87,7 +88,7 @@ class RoleController:
         id: int,
         db: AsyncSession = Depends(getAsyncDb),
     ) -> JsonResponse:
-        role: Role = await self.__findRoleForWrite(id, db)
+        role: Role = await self.__findItemForWrite(id, db)
         role.label = request.label
         if await exists(db, Role, "slug", role.slug, {"id__ne": id}):
             raiseUnprocessableContent({"label": ["Role label already exists."]})
@@ -99,7 +100,7 @@ class RoleController:
     async def delete(
         self, id: int, db: AsyncSession = Depends(getAsyncDb)
     ) -> JsonResponse:
-        role: Role = await self.__findRoleForWrite(id, db)
+        role: Role = await self.__findItemForWrite(id, db)
         await db.delete(role)
         await db.commit()
         return JsonResponse(message="Role deleted successfully.")
@@ -155,7 +156,7 @@ class RoleController:
             await db.commit()
         return JsonResponse(message="Role permissions synced successfully.")
 
-    async def __findRoleForWrite(self, role_col: str | int, db: AsyncSession) -> Role:
+    async def __findItemForWrite(self, role_col: str | int, db: AsyncSession) -> Role:
         query = await db.execute(
             select(Role).where(
                 Role.slug == role_col
