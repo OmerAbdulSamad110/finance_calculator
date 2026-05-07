@@ -9,7 +9,7 @@ ADD . /app
 
 WORKDIR /app
 
-RUN mkdir -p logs && touch logs/app.log
+RUN mkdir -p storage/logs && touch storage/logs/app.log
 
 RUN uv sync --locked --no-dev
 RUN uv add --dev debugpy black
