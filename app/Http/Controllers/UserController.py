@@ -70,9 +70,11 @@ class UserController:
         if not user:
             raiseNotFound("User not found.")
         return JsonResponse(
-            data=UserDetailResponse(**self.__formatItem(user)).model_dump(
-                exclude_unset=True
-            )
+            data={
+                "user": UserDetailResponse(**self.__formatItem(user)).model_dump(
+                    exclude_unset=True
+                )
+            }
         )
 
     async def store(
@@ -137,19 +139,6 @@ class UserController:
         await db.delete(user)
         await db.commit()
         return JsonResponse(message="User deleted successfully.")
-
-    async def __findRole(self, role_col: str | int, db: AsyncSession) -> Role:
-        query = await db.execute(
-            select(Role).where(
-                Role.slug == role_col
-                if isinstance(role_col, str)
-                else Role.id == role_col
-            )
-        )
-        role = query.scalar_one_or_none()
-        if not role:
-            raiseNotFound("Role not found.")
-        return role
 
     async def __findItemForWrite(self, id: int, db: AsyncSession) -> User:
         query = await db.execute(select(User).where(User.id == id))

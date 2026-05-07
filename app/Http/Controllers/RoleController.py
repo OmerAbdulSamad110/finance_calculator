@@ -67,10 +67,13 @@ class RoleController:
         return JsonResponse(data={"list": list})
 
     async def show(
-        self, id: int, db: AsyncSession = Depends(getAsyncDb)
+        self,
+        id: int,
+        with_permissions: bool = False,
+        db: AsyncSession = Depends(getAsyncDb),
     ) -> JsonResponse:
         role = await self.__findItemForWrite(id, db)
-        return JsonResponse(data=RoleDetailResponse(**role.toDict()).model_dump())
+        return JsonResponse(data={"role": RoleDetailResponse(**role.toDict())})
 
     async def store(
         self, request: RoleFormRequest, db: AsyncSession = Depends(getAsyncDb)

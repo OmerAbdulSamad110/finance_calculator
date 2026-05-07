@@ -52,7 +52,9 @@ class AuthController:
         )
         access_token = await Auth.createAccessToken(db, user, minutes)
         return JsonResponse(
-            message="User logged in successfully.", data=access_token, status=True
+            message="User logged in successfully.",
+            data={"token": access_token},
+            status=True,
         )
 
     async def register(
@@ -91,9 +93,11 @@ class AuthController:
     def me(self, request: Request) -> JsonResponse:
         user: UserAuthResponse | None = getattr(request.state, "user", None)
         return JsonResponse(
-            data=UserDetailResponse(
-                **user, role={"id": user.role_id, "slug": user.role_slug}
-            ).model_dump(exclude_unset=True)
+            data={
+                "user": UserDetailResponse(
+                    **user, role={"id": user.role_id, "slug": user.role_slug}
+                ).model_dump(exclude_unset=True)
+            }
         )
 
     async def forgotPassword(
@@ -134,5 +138,5 @@ class AuthController:
         token = await Auth.refreshToken(db, refresh_token, credentials.credentials)
         return JsonResponse(
             message="Token refreshed successfully.",
-            data=token,
+            data={"token": token},
         )
