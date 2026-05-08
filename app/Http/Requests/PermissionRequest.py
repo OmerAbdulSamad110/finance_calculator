@@ -6,6 +6,7 @@ LIST_TYPE = Literal["parent", "groupedby_parent"]
 
 class PermissionFormRequest(BaseModel):
     label: str = Field(
+        required=True,
         min_length=3,
         max_length=100,
         title="Permission label",
@@ -25,5 +26,5 @@ class PermissionIdsRequest(BaseModel):
 
 class PermissionRequest(BaseModel):
     list_type: Optional[LIST_TYPE] = Field(
-        default=None, description="Permission list type"
+        default=None, title="Permission list type", description="Permission list type"
     )
